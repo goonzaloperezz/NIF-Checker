@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Comprobar NIF</title>
+  <style>
+    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; margin: 40px; }
+    .card { max-width: 420px; padding: 24px; border: 1px solid #ddd; border-radius: 12px; }
+    input, button { font-size: 16px; padding: 10px; }
+    input { width: 100%; box-sizing: border-box; }
+    button { margin-top: 12px; width: 100%; cursor: pointer; }
+    .result { margin-top: 16px; font-weight: 600; min-height: 1.5em; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>Comprobar NIF</h1>
+    <input id="nif" placeholder="Introduce NIF/NIE/CIF" autocomplete="off" />
+    <button id="btn" type="button">Comprobar</button>
+    <div class="result" id="result"></div>
+  </div>
+
+  <script>
+    const WEBHOOK = "https://hook.eu1.make.com/xcglbcmdwbhct2q347ic2cfwab1m6ahc"; // <- Pega aquí tu URL de Make
+
+    const $nif = document.getElementById('nif');
+    const $btn = document.getElementById('btn');
+    const $res = document.getElementById('result');
+
+    function normalize(s) {
+      return (s || "").toUpperCase().trim().replaceAll(" ", "").replaceAll("-", "");
+    }
+
+    async function check() {
+      const nif = normalize($nif.value);
+      if (!nif) { $res.textContent = "Introduce un NIF."; return; }
+
+      $btn.disabled = true; $res.textContent = "Comprobando...";
+      try {
+        const r = await fetch(WEBHOOK, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ nif })
+        });
+        const data = await r.json().catch(() => ({}));
+        if (!r.ok) {
+          $res.textContent = data?.error || "Error en la comprobación.";
+          return;
+        }
+        $res.textContent = data.exists ? "✅ Existe en la base de datos." : "❌ No existe.";
+      } catch (e) {
+        $res.textContent = "Error de red o servidor.";
+      } finally {
+        $btn.disabled = false;
+      }
+    }
+
+    $btn.addEventListener('click', check);
+    $nif.addEventListener('keydown', (e) => { if (e.key === 'Enter') check(); });
+
+    // Prefill por querystring: ?nif=...&auto=1
+    const qs = new URLSearchParams(location.search);
+    const nifQS = qs.get('nif');
+    if (nifQS) { $nif.value = nifQS; }
+    if (qs.get('auto') === '1' && nifQS) { check(); }
+  </script>
+</body>
+</html>
