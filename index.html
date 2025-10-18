@@ -47,7 +47,7 @@
   </div>
 
   <script>
-    // 👉 Pega aquí tu URL del webhook de Make
+    // 🔗 Pega aquí tu URL del webhook de Make
     const WEBHOOK = "https://hook.eu1.make.com/xcglbcmdwbhct2q347ic2cfwab1m6ahc";
 
     const $nif = document.getElementById('nif');
@@ -58,42 +58,51 @@
       return (s || "").toUpperCase().trim().replaceAll(" ", "").replaceAll("-", "");
     }
 
+    function setResult(text, ok) {
+      $res.textContent = text;
+      if (ok === true) $res.style.color = "#147a22"; // verde
+      else if (ok === false) $res.style.color = "#b00020"; // rojo
+      else $res.style.color = "inherit";
+    }
+
     async function check() {
       const nif = normalize($nif.value);
-      if (!nif) {
-        $res.textContent = "Introduce un NIF.";
-        return;
-      }
+      if (!nif) { setResult("Introduce un NIF.", null); return; }
 
       $btn.disabled = true;
-      $res.textContent = "Comprobando...";
+      setResult("Comprobando...", null);
 
       try {
-        // Enviamos los datos en formato form-urlencoded para evitar CORS
+        // Enviamos como form-urlencoded (evita CORS preflight)
         const body = new URLSearchParams({ nif });
 
-        const r = await fetch(WEBHOOK, {
-          method: "POST",
-          body
-        });
+        const r = await fetch(WEBHOOK, { method: "POST", body });
 
-        if (r.ok) {
-          // No analizamos JSON todavía, solo queremos ver que llega
-          $res.textContent = "✅ Petición enviada. Revisa Make.";
+        // Leemos la respuesta JSON del Webhook Response de Make
+        const data = await r.json();
+
+        if (!r.ok) {
+          setResult("Error en la comprobación (" + r.status + ")", false);
+          return;
+        }
+
+        if (data && typeof data.exists === "boolean") {
+          if (data.exists)
+            setResult("✅ Existe en la base de datos.", true);
+          else
+            setResult("❌ No existe.", false);
         } else {
-          $res.textContent = "❌ Error en la comprobación (" + r.status + ")";
+          setResult("Respuesta inesperada del servidor.", false);
         }
       } catch (e) {
-        $res.textContent = "⚠️ Error de red o servidor.";
+        setResult("Error de red o CORS. Revisa el Webhook response en Make.", false);
       } finally {
         $btn.disabled = false;
       }
     }
 
     $btn.addEventListener('click', check);
-    $nif.addEventListener('keydown', e => {
-      if (e.key === 'Enter') check();
-    });
+    $nif.addEventListener('keydown', e => { if (e.key === 'Enter') check(); });
   </script>
 </body>
 </html>
