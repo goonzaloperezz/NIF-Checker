@@ -5,12 +5,37 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Comprobar NIF</title>
   <style>
-    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; margin: 40px; }
-    .card { max-width: 420px; padding: 24px; border: 1px solid #ddd; border-radius: 12px; }
-    input, button { font-size: 16px; padding: 10px; }
-    input { width: 100%; box-sizing: border-box; }
-    button { margin-top: 12px; width: 100%; cursor: pointer; }
-    .result { margin-top: 16px; font-weight: 600; min-height: 1.5em; }
+    body {
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      margin: 40px;
+      background: #fafafa;
+    }
+    .card {
+      max-width: 420px;
+      padding: 24px;
+      border: 1px solid #ddd;
+      border-radius: 12px;
+      background: white;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+    }
+    input, button {
+      font-size: 16px;
+      padding: 10px;
+    }
+    input {
+      width: 100%;
+      box-sizing: border-box;
+    }
+    button {
+      margin-top: 12px;
+      width: 100%;
+      cursor: pointer;
+    }
+    .result {
+      margin-top: 16px;
+      font-weight: 600;
+      min-height: 1.5em;
+    }
   </style>
 </head>
 <body>
@@ -22,7 +47,8 @@
   </div>
 
   <script>
-    const WEBHOOK = "https://hook.eu1.make.com/xcglbcmdwbhct2q347ic2cfwab1m6ahc"; // <- Pega aquí tu URL de Make
+    // 👉 Pega aquí tu URL del webhook de Make
+    const WEBHOOK = "https://hook.eu1.make.com/xcglbcmdwbhct2q347ic2cfwab1m6ahc";
 
     const $nif = document.getElementById('nif');
     const $btn = document.getElementById('btn');
@@ -34,36 +60,40 @@
 
     async function check() {
       const nif = normalize($nif.value);
-      if (!nif) { $res.textContent = "Introduce un NIF."; return; }
+      if (!nif) {
+        $res.textContent = "Introduce un NIF.";
+        return;
+      }
 
-      $btn.disabled = true; $res.textContent = "Comprobando...";
+      $btn.disabled = true;
+      $res.textContent = "Comprobando...";
+
       try {
+        // Enviamos los datos en formato form-urlencoded para evitar CORS
+        const body = new URLSearchParams({ nif });
+
         const r = await fetch(WEBHOOK, {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ nif })
+          body
         });
-        const data = await r.json().catch(() => ({}));
-        if (!r.ok) {
-          $res.textContent = data?.error || "Error en la comprobación.";
-          return;
+
+        if (r.ok) {
+          // No analizamos JSON todavía, solo queremos ver que llega
+          $res.textContent = "✅ Petición enviada. Revisa Make.";
+        } else {
+          $res.textContent = "❌ Error en la comprobación (" + r.status + ")";
         }
-        $res.textContent = data.exists ? "✅ Existe en la base de datos." : "❌ No existe.";
       } catch (e) {
-        $res.textContent = "Error de red o servidor.";
+        $res.textContent = "⚠️ Error de red o servidor.";
       } finally {
         $btn.disabled = false;
       }
     }
 
     $btn.addEventListener('click', check);
-    $nif.addEventListener('keydown', (e) => { if (e.key === 'Enter') check(); });
-
-    // Prefill por querystring: ?nif=...&auto=1
-    const qs = new URLSearchParams(location.search);
-    const nifQS = qs.get('nif');
-    if (nifQS) { $nif.value = nifQS; }
-    if (qs.get('auto') === '1' && nifQS) { check(); }
+    $nif.addEventListener('keydown', e => {
+      if (e.key === 'Enter') check();
+    });
   </script>
 </body>
 </html>
