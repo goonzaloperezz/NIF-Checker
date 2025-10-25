@@ -30,10 +30,21 @@
       margin: 0;
       height: 100vh;
       display: flex;
+      flex-direction: column;
       align-items: center;
       justify-content: center;
       background: var(--bg);
       color: var(--text);
+    }
+
+    .logo {
+      margin-bottom: 30px;
+    }
+
+    .logo img {
+      width: 180px;
+      height: auto;
+      filter: drop-shadow(0 2px 3px rgba(0,0,0,0.1));
     }
 
     .card {
@@ -104,6 +115,11 @@
   </style>
 </head>
 <body>
+  <!-- Logo encima de la caja -->
+  <div class="logo">
+    <img src="https://www.billin.net/wp-content/uploads/2020/02/logo-billin.svg" alt="Billin Logo">
+  </div>
+
   <div class="card">
     <h1>Comprobar NIF</h1>
     <input id="nif" placeholder="Introduce NIF/NIE/CIF" autocomplete="off" />
