@@ -14,7 +14,7 @@
     :root {
       --primary: #2E5BFF;       /* Azul Billin */
       --primary-hover: #2449CC;
-      --bg: #F9FAFB;            /* Fondo suave */
+      --bg: #F5F7FB;            /* Fondo suave */
       --card-bg: #FFFFFF;
       --text: #0F172A;
       --muted: #6B7280;
@@ -28,41 +28,44 @@
     body {
       font-family: 'Inter', system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
       margin: 0;
-      height: 100vh;
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      background: var(--bg);
+      color: var(--text);
+      padding: 24px;
+    }
+
+    .stack {
       display: flex;
       flex-direction: column;
       align-items: center;
-      justify-content: center;
-      background: var(--bg);
-      color: var(--text);
-    }
-
-    .logo {
-      margin-bottom: 30px;
+      gap: 28px;
+      width: 100%;
     }
 
     .logo img {
-      width: 180px;
+      width: 190px; /* ajusta si lo ves muy grande/pequeño */
       height: auto;
-      filter: drop-shadow(0 2px 3px rgba(0,0,0,0.1));
+      display: block;
+      filter: drop-shadow(0 2px 3px rgba(0,0,0,0.08));
     }
 
     .card {
       width: 100%;
-      max-width: 550px;
-      padding: 40px;
+      max-width: 600px;       /* más grande */
+      padding: 42px;          /* más aire */
       border: 1px solid var(--border);
       border-radius: 16px;
       background: var(--card-bg);
-      box-shadow: 0 6px 24px rgba(0, 0, 0, 0.08);
+      box-shadow: 0 10px 34px rgba(0, 0, 0, 0.08);
       text-align: center;
     }
 
     h1 {
-      margin-bottom: 20px;
-      font-size: 32px;
+      margin: 0 0 20px;
+      font-size: 34px;
       font-weight: 600;
-      color: var(--text);
     }
 
     input, button {
@@ -76,12 +79,16 @@
       border: 1px solid var(--border);
       margin-bottom: 16px;
       transition: border 0.2s, box-shadow 0.2s;
+      background: #fff;
+      color: var(--text);
     }
+
+    input::placeholder { color: #a0a7b3; }
 
     input:focus {
       outline: none;
       border-color: var(--primary);
-      box-shadow: 0 0 0 3px rgba(46, 91, 255, 0.2);
+      box-shadow: 0 0 0 3px rgba(46, 91, 255, 0.18);
     }
 
     button {
@@ -94,18 +101,9 @@
       transition: background 0.2s, transform 0.05s;
     }
 
-    button:hover {
-      background: var(--primary-hover);
-    }
-
-    button:active {
-      transform: translateY(1px);
-    }
-
-    button:disabled {
-      opacity: 0.6;
-      cursor: not-allowed;
-    }
+    button:hover { background: var(--primary-hover); }
+    button:active { transform: translateY(1px); }
+    button:disabled { opacity: 0.6; cursor: not-allowed; }
 
     .result {
       margin-top: 20px;
@@ -115,16 +113,19 @@
   </style>
 </head>
 <body>
-  <!-- Logo encima de la caja -->
-  <div class="logo">
-    <img src="https://www.billin.net/wp-content/uploads/2020/02/logo-billin.svg" alt="Billin Logo">
-  </div>
+  <div class="stack">
+    <!-- Logo local: sube logo-billin.svg o .png a la raíz del repo -->
+    <div class="logo">
+      <img src="./billin_new_logo.svg" alt="Billin Logo" loading="eager" decoding="async"
+           onerror="this.onerror=null; this.src='./billin_new_logo.svg';">
+    </div>
 
-  <div class="card">
-    <h1>Comprobar NIF</h1>
-    <input id="nif" placeholder="Introduce NIF/NIE/CIF" autocomplete="off" />
-    <button id="btn" type="button">Comprobar</button>
-    <div class="result" id="result"></div>
+    <div class="card">
+      <h1>Comprobar NIF</h1>
+      <input id="nif" placeholder="Introduce NIF/NIE/CIF" autocomplete="off" />
+      <button id="btn" type="button">Comprobar</button>
+      <div class="result" id="result"></div>
+    </div>
   </div>
 
   <script>
@@ -163,10 +164,7 @@
         }
 
         if (data && typeof data.exists === "boolean") {
-          if (data.exists)
-            setResult("✅ Existe en la base de datos.", true);
-          else
-            setResult("❌ No existe.", false);
+          setResult(data.exists ? "✅ Existe en la base de datos." : "❌ No existe.", data.exists);
         } else {
           setResult("Respuesta inesperada del servidor.", false);
         }
@@ -182,4 +180,5 @@
   </script>
 </body>
 </html>
+
 
