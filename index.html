@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Comprobar NIF</title>
 
-  <!-- Fuente moderna estilo Billin -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
@@ -117,7 +116,45 @@
 
     .hidden { display: none; }
 
-    /* Botón cerrar sesión (estilo secundario, arriba dcha) */
+    /* --- Grupo de contraseña con botón ojo --- */
+    .input-group {
+      position: relative;
+      margin-bottom: 16px;
+    }
+    .input-group input {
+      margin-bottom: 0;
+      padding-right: 44px;
+    }
+    .toggle-eye {
+      position: absolute;
+      right: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 36px;
+      height: 36px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: #fff;
+      color: var(--muted);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: border .2s, box-shadow .2s, color .2s;
+    }
+    .toggle-eye:hover {
+      border-color: var(--primary);
+      color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(46, 91, 255, 0.12);
+    }
+    .toggle-eye[aria-pressed="true"] {
+      color: var(--primary);
+    }
+    .toggle-eye svg {
+      width: 20px; height: 20px;
+    }
+
+    /* Botón cerrar sesión */
     .logout {
       position: absolute;
       top: 14px;
@@ -148,7 +185,21 @@
     <!-- Pantalla 1: Login -->
     <div class="card" id="login-card">
       <h1>Ingrese contraseña</h1>
-      <input id="pwd" type="password" placeholder="Contraseña" autocomplete="current-password" />
+
+      <div class="input-group">
+        <input id="pwd" type="password" placeholder="Contraseña" autocomplete="current-password" />
+        <button id="toggle-eye" type="button" class="toggle-eye" aria-pressed="false" title="Mostrar u ocultar contraseña">
+          <svg id="icon-eye" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12Z"/>
+            <circle cx="12" cy="12" r="3"/>
+          </svg>
+          <svg id="icon-eye-off" class="hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M3 3l18 18"/>
+            <path d="M9.88 5.08A10.94 10.94 0 0112 5c7 0 11 7 11 7a18.39 18.39 0 01-4.27 5.29M6.61 6.61A18.52 18.52 0 001 12s4 7 11 7a10.93 10.93 0 005.39-1.4"/>
+          </svg>
+        </button>
+      </div>
+
       <button id="btn-login" type="button">Acceder</button>
       <div class="login-msg" id="login-msg"></div>
     </div>
@@ -174,6 +225,9 @@
     const $pwd       = document.getElementById('pwd');
     const $btnLogin  = document.getElementById('btn-login');
     const $loginMsg  = document.getElementById('login-msg');
+    const $toggleEye = document.getElementById('toggle-eye');
+    const $iconEye   = document.getElementById('icon-eye');
+    const $iconEyeOff= document.getElementById('icon-eye-off');
     const $btnLogout = document.getElementById('btn-logout');
 
     const $nif = document.getElementById('nif');
@@ -216,15 +270,22 @@
 
     function logout(){
       localStorage.removeItem("validated");
-      // Opcional: limpiar posibles mensajes del validador
       $res.textContent = "";
       showLogin();
     }
 
-    // Autologin si ya existe sesión
-    if (localStorage.getItem("validated") === "true") {
-      showApp();
+    // Mostrar/ocultar contraseña
+    function togglePassword(){
+      const isText = $pwd.type === "text";
+      $pwd.type = isText ? "password" : "text";
+      $toggleEye.setAttribute("aria-pressed", String(!isText));
+      $iconEye.classList.toggle('hidden', !isText);
+      $iconEyeOff.classList.toggle('hidden', isText);
     }
+    $toggleEye.addEventListener('click', togglePassword);
+
+    // Autologin
+    if (localStorage.getItem("validated") === "true") showApp();
 
     $btnLogin.addEventListener('click', tryLogin);
     $pwd.addEventListener('keydown', e => { if (e.key === 'Enter') tryLogin(); });
