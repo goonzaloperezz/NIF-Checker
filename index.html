@@ -12,9 +12,9 @@
 
   <style>
     :root {
-      --primary: #2E5BFF;       /* Azul Billin */
+      --primary: #2E5BFF;
       --primary-hover: #2449CC;
-      --bg: #F5F7FB;            /* Fondo suave */
+      --bg: #F5F7FB;
       --card-bg: #FFFFFF;
       --text: #0F172A;
       --muted: #6B7280;
@@ -53,7 +53,7 @@
 
     .card {
       width: 100%;
-      max-width: 600px;       /* caja grande */
+      max-width: 600px;
       padding: 42px;
       border: 1px solid var(--border);
       border-radius: 16px;
@@ -114,19 +114,17 @@
     .ok    { color: var(--success) !important; }
     .error { color: var(--danger) !important; }
 
-    /* utilidades */
     .hidden { display: none; }
   </style>
 </head>
 <body>
   <div class="stack">
-    <!-- Logo local -->
     <div class="logo">
       <img src="./billin_new_logo.svg" alt="Billin Logo" loading="eager" decoding="async"
            onerror="this.onerror=null; this.src='./billin_new_logo.svg';">
     </div>
 
-    <!-- Pantalla 1: contraseña -->
+    <!-- Pantalla 1: Login -->
     <div class="card" id="login-card">
       <h1>Ingrese contraseña</h1>
       <input id="pwd" type="password" placeholder="Contraseña" autocomplete="current-password" />
@@ -134,7 +132,7 @@
       <div class="login-msg" id="login-msg"></div>
     </div>
 
-    <!-- Pantalla 2: app (igual que tenías) -->
+    <!-- Pantalla 2: Comprobador -->
     <div class="card hidden" id="app-card">
       <h1>Comprobar NIF</h1>
       <input id="nif" placeholder="Introduce NIF/NIE/CIF" autocomplete="off" />
@@ -148,15 +146,17 @@
     const PASSWORD = "teamsystem_nifchequer2025";
     const WEBHOOK  = "https://hook.eu1.make.com/xcglbcmdwbhct2q347ic2cfwab1m6ahc";
 
-    // ===== Elementos comunes =====
+    // ===== Elementos =====
     const $loginCard = document.getElementById('login-card');
     const $appCard   = document.getElementById('app-card');
+    const $pwd       = document.getElementById('pwd');
+    const $btnLogin  = document.getElementById('btn-login');
+    const $loginMsg  = document.getElementById('login-msg');
+    const $nif       = document.getElementById('nif');
+    const $btn       = document.getElementById('btn');
+    const $res       = document.getElementById('result');
 
-    // --- Login ---
-    const $pwd      = document.getElementById('pwd');
-    const $btnLogin = document.getElementById('btn-login');
-    const $loginMsg = document.getElementById('login-msg');
-
+    // ===== Login con recordatorio =====
     function setLoginMsg(text, ok = null){
       $loginMsg.textContent = text || "";
       $loginMsg.classList.remove('ok','error');
@@ -164,16 +164,19 @@
       if (ok === false) $loginMsg.classList.add('error');
     }
 
+    function showApp(){
+      $loginCard.classList.add('hidden');
+      $appCard.classList.remove('hidden');
+      setTimeout(()=> $nif.focus(), 100);
+    }
+
     function tryLogin(){
       const value = ($pwd.value || "").trim();
       if (!value) { setLoginMsg("Introduce la contraseña.", false); return; }
       if (value === PASSWORD){
         setLoginMsg("Acceso concedido.", true);
-        // cambiar a pantalla de app
-        $loginCard.classList.add('hidden');
-        $appCard.classList.remove('hidden');
-        // foco en el input de NIF
-        setTimeout(()=> document.getElementById('nif').focus(), 50);
+        localStorage.setItem("validated", "true"); // Guarda sesión
+        showApp();
       } else {
         setLoginMsg("Contraseña incorrecta.", false);
         $pwd.value = "";
@@ -181,14 +184,15 @@
       }
     }
 
+    // Si ya está validado, mostrar directamente
+    if (localStorage.getItem("validated") === "true") {
+      showApp();
+    }
+
     $btnLogin.addEventListener('click', tryLogin);
     $pwd.addEventListener('keydown', e => { if (e.key === 'Enter') tryLogin(); });
 
-    // --- App (tu lógica intacta) ---
-    const $nif = document.getElementById('nif');
-    const $btn = document.getElementById('btn');
-    const $res = document.getElementById('result');
-
+    // ===== Comprobador NIF =====
     function normalize(s) {
       return (s || "").toUpperCase().trim().replaceAll(" ", "").replaceAll("-", "");
     }
