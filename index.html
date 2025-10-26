@@ -60,6 +60,7 @@
       background: var(--card-bg);
       box-shadow: 0 10px 34px rgba(0, 0, 0, 0.08);
       text-align: center;
+      position: relative;
     }
 
     h1 {
@@ -115,6 +116,26 @@
     .error { color: var(--danger) !important; }
 
     .hidden { display: none; }
+
+    /* Botón cerrar sesión (estilo secundario, arriba dcha) */
+    .logout {
+      position: absolute;
+      top: 14px;
+      right: 14px;
+      width: auto;
+      padding: 8px 12px;
+      background: #ffffff;
+      color: var(--muted);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-weight: 600;
+      transition: border .2s, color .2s, box-shadow .2s;
+    }
+    .logout:hover {
+      color: var(--primary);
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(46,91,255,.12);
+    }
   </style>
 </head>
 <body>
@@ -134,6 +155,7 @@
 
     <!-- Pantalla 2: Comprobador -->
     <div class="card hidden" id="app-card">
+      <button id="btn-logout" type="button" class="logout">Cerrar sesión</button>
       <h1>Comprobar NIF</h1>
       <input id="nif" placeholder="Introduce NIF/NIE/CIF" autocomplete="off" />
       <button id="btn" type="button">Comprobar</button>
@@ -152,9 +174,11 @@
     const $pwd       = document.getElementById('pwd');
     const $btnLogin  = document.getElementById('btn-login');
     const $loginMsg  = document.getElementById('login-msg');
-    const $nif       = document.getElementById('nif');
-    const $btn       = document.getElementById('btn');
-    const $res       = document.getElementById('result');
+    const $btnLogout = document.getElementById('btn-logout');
+
+    const $nif = document.getElementById('nif');
+    const $btn = document.getElementById('btn');
+    const $res = document.getElementById('result');
 
     // ===== Login con recordatorio =====
     function setLoginMsg(text, ok = null){
@@ -170,12 +194,18 @@
       setTimeout(()=> $nif.focus(), 100);
     }
 
+    function showLogin(){
+      $appCard.classList.add('hidden');
+      $loginCard.classList.remove('hidden');
+      setTimeout(()=> $pwd.focus(), 100);
+    }
+
     function tryLogin(){
       const value = ($pwd.value || "").trim();
       if (!value) { setLoginMsg("Introduce la contraseña.", false); return; }
       if (value === PASSWORD){
         setLoginMsg("Acceso concedido.", true);
-        localStorage.setItem("validated", "true"); // Guarda sesión
+        localStorage.setItem("validated", "true");
         showApp();
       } else {
         setLoginMsg("Contraseña incorrecta.", false);
@@ -184,13 +214,21 @@
       }
     }
 
-    // Si ya está validado, mostrar directamente
+    function logout(){
+      localStorage.removeItem("validated");
+      // Opcional: limpiar posibles mensajes del validador
+      $res.textContent = "";
+      showLogin();
+    }
+
+    // Autologin si ya existe sesión
     if (localStorage.getItem("validated") === "true") {
       showApp();
     }
 
     $btnLogin.addEventListener('click', tryLogin);
     $pwd.addEventListener('keydown', e => { if (e.key === 'Enter') tryLogin(); });
+    $btnLogout.addEventListener('click', logout);
 
     // ===== Comprobador NIF =====
     function normalize(s) {
