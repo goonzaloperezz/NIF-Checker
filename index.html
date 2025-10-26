@@ -45,7 +45,7 @@
     }
 
     .logo img {
-      width: 190px; /* ajusta si lo ves muy grande/pequeño */
+      width: 190px;
       height: auto;
       display: block;
       filter: drop-shadow(0 2px 3px rgba(0,0,0,0.08));
@@ -53,8 +53,8 @@
 
     .card {
       width: 100%;
-      max-width: 600px;       /* más grande */
-      padding: 42px;          /* más aire */
+      max-width: 600px;       /* caja grande */
+      padding: 42px;
       border: 1px solid var(--border);
       border-radius: 16px;
       background: var(--card-bg);
@@ -105,22 +105,37 @@
     button:active { transform: translateY(1px); }
     button:disabled { opacity: 0.6; cursor: not-allowed; }
 
-    .result {
+    .result, .login-msg {
       margin-top: 20px;
       font-weight: 600;
       min-height: 1.6em;
+      color: var(--muted);
     }
+    .ok    { color: var(--success) !important; }
+    .error { color: var(--danger) !important; }
+
+    /* utilidades */
+    .hidden { display: none; }
   </style>
 </head>
 <body>
   <div class="stack">
-    <!-- Logo local: sube logo-billin.svg o .png a la raíz del repo -->
+    <!-- Logo local -->
     <div class="logo">
       <img src="./billin_new_logo.svg" alt="Billin Logo" loading="eager" decoding="async"
            onerror="this.onerror=null; this.src='./billin_new_logo.svg';">
     </div>
 
-    <div class="card">
+    <!-- Pantalla 1: contraseña -->
+    <div class="card" id="login-card">
+      <h1>Ingrese contraseña</h1>
+      <input id="pwd" type="password" placeholder="Contraseña" autocomplete="current-password" />
+      <button id="btn-login" type="button">Acceder</button>
+      <div class="login-msg" id="login-msg"></div>
+    </div>
+
+    <!-- Pantalla 2: app (igual que tenías) -->
+    <div class="card hidden" id="app-card">
       <h1>Comprobar NIF</h1>
       <input id="nif" placeholder="Introduce NIF/NIE/CIF" autocomplete="off" />
       <button id="btn" type="button">Comprobar</button>
@@ -129,8 +144,47 @@
   </div>
 
   <script>
-    const WEBHOOK = "https://hook.eu1.make.com/xcglbcmdwbhct2q347ic2cfwab1m6ahc";
+    // ===== Config =====
+    const PASSWORD = "teamsystem_nifchequer2025";
+    const WEBHOOK  = "https://hook.eu1.make.com/xcglbcmdwbhct2q347ic2cfwab1m6ahc";
 
+    // ===== Elementos comunes =====
+    const $loginCard = document.getElementById('login-card');
+    const $appCard   = document.getElementById('app-card');
+
+    // --- Login ---
+    const $pwd      = document.getElementById('pwd');
+    const $btnLogin = document.getElementById('btn-login');
+    const $loginMsg = document.getElementById('login-msg');
+
+    function setLoginMsg(text, ok = null){
+      $loginMsg.textContent = text || "";
+      $loginMsg.classList.remove('ok','error');
+      if (ok === true)  $loginMsg.classList.add('ok');
+      if (ok === false) $loginMsg.classList.add('error');
+    }
+
+    function tryLogin(){
+      const value = ($pwd.value || "").trim();
+      if (!value) { setLoginMsg("Introduce la contraseña.", false); return; }
+      if (value === PASSWORD){
+        setLoginMsg("Acceso concedido.", true);
+        // cambiar a pantalla de app
+        $loginCard.classList.add('hidden');
+        $appCard.classList.remove('hidden');
+        // foco en el input de NIF
+        setTimeout(()=> document.getElementById('nif').focus(), 50);
+      } else {
+        setLoginMsg("Contraseña incorrecta.", false);
+        $pwd.value = "";
+        $pwd.focus();
+      }
+    }
+
+    $btnLogin.addEventListener('click', tryLogin);
+    $pwd.addEventListener('keydown', e => { if (e.key === 'Enter') tryLogin(); });
+
+    // --- App (tu lógica intacta) ---
     const $nif = document.getElementById('nif');
     const $btn = document.getElementById('btn');
     const $res = document.getElementById('result');
@@ -141,9 +195,9 @@
 
     function setResult(text, ok) {
       $res.textContent = text;
-      if (ok === true) $res.style.color = "var(--success)";
-      else if (ok === false) $res.style.color = "var(--danger)";
-      else $res.style.color = "var(--muted)";
+      $res.classList.remove('ok','error');
+      if (ok === true)  $res.classList.add('ok');
+      if (ok === false) $res.classList.add('error');
     }
 
     async function check() {
@@ -180,5 +234,3 @@
   </script>
 </body>
 </html>
-
-
